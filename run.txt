@@ -1,0 +1,2 @@
+deno run --allow-net --allow-env --allow-read chatServer.ts
+deno run --allow-net chatTest.ts

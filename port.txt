@@ -1,0 +1,6 @@
+6974 - Web Server
+    /stats - RTMP Status
+    /chat - Chat Serve
+    /events - Event Serve
+6975 - Kick Proxy
+6976 - Chat WebSocket Server

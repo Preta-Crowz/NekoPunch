@@ -1,0 +1,12 @@
+nginx/*
+!nginx/assets
+!nginx/html
+nginx/assets/**/*.webp
+nginx/assets/**/*.svg
+
+nginx-rtmp-module/*
+
+.env.*
+!.env.defaults
+.profile.*
+!.profile.defaults

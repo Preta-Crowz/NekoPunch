@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<head>
+    <meta charset="utf-8">
+    <script src="/assets/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="></script>
+    <script src="/assets/chat.js"></script>
+    <style>
+        @font-face {
+          font-family: "godo";
+          src: url("/assets/godo.ttf") format("truetype");
+          font-weight: normal;
+          size-adjust: 80%;
+        }
+
+        * {
+          font-family: 'godo', serif;
+          font-size: 1.1em;
+        }
+
+        #eventList {
+            margin-left: 1px;
+            padding: 0.1em;
+            display: flex;
+            flex-direction: column-reverse;
+            height: 1080px;
+            overflow: hidden;
+        }
+        .event {
+            position: relative;
+            display: block;
+            width: 440px;
+            margin-top: 0.1em;
+            padding: 0.5em 0.7em;
+            background: #555;
+            color: white;
+            border-radius: 5px;
+        }
+        .event h2 {
+            width: 100%;
+            padding-bottom: 0.2em;
+            margin: 0;
+            margin-bottom: 0.2em;
+            font-size: 1.3em;
+            border-bottom: solid white 1px;
+        }
+        .notify {
+            background: #FFD9E6;
+            color: black;
+        }
+
+        .badgeList {
+            display: inline-block;
+            position: absolute;
+            top: 0.3em;
+            right: 0.5em;
+        }
+
+        img {
+            display: inline-block;
+            height: 0.6em;
+            width: 0.6em;
+            margin: 0;
+            margin-right: 0.1em;
+        }
+    </style>
+</head>
+<body>
+    <div id="eventList">
+        <!--
+        <div class="event notify">
+        <h2>[#NekoPunch]</h2>
+        Test Notify
+        테스트입니다.
+        </div>
+        <div class="event notify">
+        <h2>[#NekoPunch]</h2>
+        Test Notify
+        테스트입니다.
+        </div>
+        <div class="event notify">
+        <h2>[#NekoPunch]</h2>
+        Test Notify
+        테스트입니다.
+        </div>
+        -->
+    </div>
+</body>
