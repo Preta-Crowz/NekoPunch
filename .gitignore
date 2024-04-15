@@ -6,7 +6,10 @@ nginx/assets/**/*.svg
 
 nginx-rtmp-module/*
 
+.env
 .env.*
 !.env.defaults
 .profile.*
 !.profile.defaults
+
+dumped/*
