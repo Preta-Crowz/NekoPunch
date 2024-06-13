@@ -1,12 +1,14 @@
 import { WebSocketClient, StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mod.ts";
+import Broadcaster from "../broadcaster.ts";
+import ChatComponent from "../chatComponent.ts"
 import { makeSeededGenerators, randomInt } from "https://deno.land/x/vegas@v1.3.0/mod.ts";
 import { Color } from "https://deno.land/x/color@v0.3.0/mod.ts";
 
 
-export default async function(notify, id): boolean {
+export default async function (broadcaster: Broadcaster, id: string): Promise<WebSocketClient | null> {
   if (!id) {
     "No ID configured on Chzzk, abort connect"
-    return false;
+    return null;
   }
   const channelData = (await(await fetch(`https://api.chzzk.naver.com/polling/v2/channels/${id}/live-status`)).json()).content
   const tokenData = await (await fetch(`https://comm-api.game.naver.com/nng_main/v1/chats/access-token?channelId=${channelData.chatChannelId}&chatType=STREAMING`)).json();
@@ -26,18 +28,17 @@ export default async function(notify, id): boolean {
   }
 
   const ws: WebSocketClient = new StandardWebSocketClient(endpoint);
-  let interval;
+  let interval: number;
   ws.on("open", function() {
     console.log("Connected to Chzzk");
     ws.send(JSON.stringify(subscribe));
     interval = setInterval(ws=>ws.send(JSON.stringify({"ver":"2","cmd":0})),1000,ws);
   });
 
-  ws.on("message", function (message: string) {
+  ws.on("message", function (message: { data: string }) {
     if (message.data) {
       try {
-        let data = JSON.parse(message.data);
-        handleMessage(data);
+        handleMessage(message.data);
       } catch (e) {
         console.error(e);
         return;
@@ -56,9 +57,12 @@ export default async function(notify, id): boolean {
     console.error(err);
   });
 
-  function handleMessage(data) {
+  function handleMessage(data: any) {
+    data = JSON.parse(data);
     switch (data.cmd) {
       case 93101:
+        data.bdy[0].profile = JSON.parse(data.bdy[0].profile);
+        data.bdy[0].extras = JSON.parse(data.bdy[0].extras);
         return handleChat(data.bdy[0]);
       case 10100: // Subscribed
       case 15101: // Recents
@@ -71,11 +75,8 @@ export default async function(notify, id): boolean {
     }
   }
 
-  function handleChat(data) {
-    data.profile = JSON.parse(data.profile);
-    data.extras = JSON.parse(data.extras);
-    notify(JSON.stringify({
-      "type": "chat",
+  function handleChat(data: Chat) {
+    broadcaster.chat({
       "platform": "chzzk",
       "content": textContext(data.msg),
       "sender": {
@@ -84,24 +85,24 @@ export default async function(notify, id): boolean {
         "color": getColor(data.profile),
         "badges": getBadges(data.profile)
       }
-    }));
+    });
   }
 
   // NYI
-  function textContext(msg) {
-    let r = [];
-    r.push({text: msg});
+  function textContext(msg: string): ChatComponent[] {
+    let r: ChatComponent[] = [];
+    r.push({ type: "text", value: msg });
     return r;
   }
 
-  function getColor(profile) {
+  function getColor(profile: Profile) {
     if (profile.title) return profile.title.color;
     const rand = makeSeededGenerators(profile.userIdHash);
     return Color.string(`hsl(${rand.randomInt(0,360)},${rand.randomInt(30,81)}%,50%)`).hex();
   }
 
-  function getBadges(profile) {
-    let r = profile.activityBadges.map(v=>v.badgeId);
+  function getBadges(profile: Profile) {
+    let r = profile.activityBadges.map(v => v.badgeId);
     if (profile.userRoleCode != "common_user") r.push(profile.userRoleCode);
     // if (profile.badge.imageUrl) {
     //   let v = profile.badge.imageUrl.split('/');
@@ -113,7 +114,54 @@ export default async function(notify, id): boolean {
     return r;
   }
 
-  return true;
+  return ws;
+}
+
+type Badge = {
+  badgeId: string;
+}
+
+type Title = {
+  name: string;
+  color: string;
+}
+
+type Profile = {
+  userIdHash: string;
+  nickname: string;
+  profileImageUrl: string;
+  userRoleCode: string;
+  badge: Badge;
+  title: Title;
+  verifiedMark: boolean,
+  activityBadges: Badge[];
+  streamingProperty: {
+    subscription: {
+      tier: number
+    }
+  };
+}
+
+type Chat = {
+  svcid: string;
+  cid: string;
+  mbrCnt: number;
+  uid: string;
+  profile: Profile;
+  msg: string;
+  msgTypeCode: number;
+  msgStatusType: string;
+  extras: any; // TODO
+  ctime: number,
+  utime: number,
+  msgTid?: number;
+  session: boolean;
+  msgTime: number;
+}
+
+type RawMessage = {
+  cmd: number;
+  bdy: Chat[]
 }
 
 /*

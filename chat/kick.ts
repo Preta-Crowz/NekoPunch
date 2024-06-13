@@ -1,9 +1,11 @@
 import { WebSocketClient, StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mod.ts";
+import Broadcaster from "../broadcaster.ts";
+import ChatComponent from "../chatComponent.ts"
 
-export default async function(notify, id): boolean {
+export default async function (broadcaster: Broadcaster, id: string): Promise<WebSocketClient | null> {
   if (!id) {
     "No ID configured on Kick, abort connect"
-    return false;
+    return null;
   }
 
   const chInfo = await (await fetch(`https://kick.com/api/v2/channels/${id}/chatroom`)).json();
@@ -18,14 +20,14 @@ export default async function(notify, id): boolean {
   };
 
   const ws: WebSocketClient = new StandardWebSocketClient(endpoint);
-  let interval;
+  let interval: number;
   ws.on("open", function() {
     console.log("Connected to Kick");
     ws.send(JSON.stringify(subscribe));
     interval = setInterval(ws=>ws.send(JSON.stringify({"event":"pusher:ping","data":{}})),5000,ws);
   });
 
-  ws.on("message", function (message: string) {
+  ws.on("message", function (message: RawMessage) {
     if (message.data) {
       try {
         let data = JSON.parse(message.data);
@@ -48,7 +50,7 @@ export default async function(notify, id): boolean {
     console.error(err);
   });
 
-  function handleMessage(data) {
+  function handleMessage(data: RawMessage) {
     switch (data.event) {
       case "App\\Events\\ChatMessageEvent":
         return handleChat(JSON.parse(data.data))
@@ -63,12 +65,11 @@ export default async function(notify, id): boolean {
     }
   }
 
-  function handleChat(data) {
+  function handleChat(data: Chat) {
     if (chInfo.id !== data.chatroom_id) {
       console.warn(`Got wrong sent message: ${data.chatroom_id}`)
     }
-    notify(JSON.stringify({
-      "type": "chat",
+    broadcaster.chat({
       "platform": "kick",
       "content": textContext(data.content),
       "sender": {
@@ -77,23 +78,52 @@ export default async function(notify, id): boolean {
         "color": data.sender.identity.color,
         "badges": getBadges(data.sender.identity.badges)
       }
-    }));
+    });
   }
 
   // NYI
-  function textContext(msg) {
-    let r = [];
-    r.push({text: msg});
+  function textContext(msg: string): ChatComponent[] {
+    let r: ChatComponent[] = [];
+    r.push({ type: "text", value: msg });
     return r;
   }
 
-  function getBadges(badges) {
+  function getBadges(badges: Badge[]) {
     return badges.map(v => {
       return v.count ? `${v.type}_${v.count}` : v.type;
     });
   }
 
-  return true;
+  return ws;
+}
+
+type RawMessage = {
+  event: string;
+  data: string;
+}
+
+type Badge = {
+  count: number;
+  type: string;
+}
+
+type Profile = {
+  id: number;
+  username: string;
+  slug: string;
+  identity: {
+    color: string;
+    badges: Badge[]
+  }
+}
+
+type Chat = {
+  id: string;
+  chatroom_id: number;
+  content: string;
+  type: string;
+  created_at: string;
+  sender: Profile
 }
 
 /*

@@ -51,9 +51,9 @@ function chat(header, content, color) {
 function processMessage(data) {
   switch(data.type) {
     case "status":
-      return notifyStatus(data);
+      return notifyStatus(data.data);
     case "chat":
-      return processChat(data);
+      return processChat(data.data);
     default:
       console.warn(`Process not implemented for type: ${data.type}`);
   }

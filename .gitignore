@@ -13,3 +13,7 @@ nginx-rtmp-module/*
 !.profile.defaults
 
 dumped/*
+
+.vscode
+.vscode/*
+.vscode/**

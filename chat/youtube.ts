@@ -1,15 +1,17 @@
 import { LiveChat } from "npm:youtube-chat";
+import Broadcaster from "../broadcaster.ts";
+import ChatComponent from "../chatComponent.ts"
 import { makeSeededGenerators, randomInt } from "https://deno.land/x/vegas@v1.3.0/mod.ts";
 import { Color } from "https://deno.land/x/color@v0.3.0/mod.ts";
 
-export default async function(notify, id): boolean {
+export default async function (broadcaster: Broadcaster, id: string): Promise<LiveChat | null> {
   if (!id) {
     "No ID configured on YouTube, abort connect"
-    return false;
+    return null;
   }
 
+  const liveChat = new LiveChat({handle: id});
   let wait = true;
-  const liveChat = new LiveChat({channelId: id});
 
   liveChat.on("start", (liveId) => {
     console.log("Connected to YouTube");
@@ -18,21 +20,21 @@ export default async function(notify, id): boolean {
 
   liveChat.on("end", (reason) => {
     console.log("Disconnected from YouTube");
-    if (message) console.log(`Reason: ${reason}`);
+    if (reason) console.log(`Reason: ${reason}`);
   });
 
-  liveChat.on("chat", (data) => {
+  liveChat.on("chat", (data: ChatItem) => {
     if (wait) return;
-    notify(JSON.stringify({
-      "type": "chat",
+    broadcaster.chat({
       "platform": "youtube",
-      "content": data.message,
+      "content": convertComponents(data.message),
       "sender": {
+        "id": data.author.channelId,
         "username": data.author.name,
         "color": getColor(data.author.channelId),
         "badges": getBadges(data)
       }
-    }));
+    });
   });
 
   liveChat.on("error", (err) => {
@@ -40,12 +42,12 @@ export default async function(notify, id): boolean {
     console.error(err);
   });
 
-  function getColor(id) {
+  function getColor(id: string) {
     const rand = makeSeededGenerators(id);
     return Color.string(`hsl(${rand.randomInt(0,360)},${rand.randomInt(30,81)}%,50%)`).hex();
   }
 
-  function getBadges(data) {
+  function getBadges(data: ChatItem) {
     let r = [];
     if (data.isMembership) r.push("membership");
     if (data.isOwner) r.push("owner");
@@ -54,8 +56,52 @@ export default async function(notify, id): boolean {
     return r;
   }
 
+  function convertComponents(data: any[]): ChatComponent[] {
+    let r = [];
+    for (let component of data) {
+      if ('text' in component) r.push({ type: "text", data: component.text });
+    }
+    return r;
+  }
+
   const ok = await liveChat.start();
-  return ok;
+  return ok ? liveChat : null;
+}
+
+// Can't import them, so copy them
+type ChatItem = {
+  author: {
+    name: string;
+    thumbnail?: ImageItem;
+    channelId: string;
+    badge?: {
+      thumbnail: ImageItem;
+      label: string;
+    }
+  }
+  message: MessageItem[];
+  superchat?: {
+    amount: string;
+    color: string;
+    sticker?: ImageItem;
+  }
+  isMembership: boolean;
+  isVerified: boolean;
+  isOwner: boolean;
+  isModerator: boolean;
+  timestamp: Date;
+}
+
+type MessageItem = { text: string } | EmojiItem;
+
+interface ImageItem {
+  url: string;
+  alt: string;
+}
+
+interface EmojiItem extends ImageItem {
+  emojiText: string;
+  isCustomEmoji: boolean;
 }
 
 /*
