@@ -17,3 +17,6 @@ dumped/*
 .vscode
 .vscode/*
 .vscode/**
+
+deno.json
+deno.lock
