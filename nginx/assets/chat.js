@@ -1,6 +1,6 @@
-let eventList
+let eventList;
 let eventInternal = [];
-const eventLimit = 20
+const eventLimit = 50;
 
 $(function() {
   eventList = $("#eventList");
@@ -9,6 +9,10 @@ $(function() {
   ws.onopen = function() {
     console.log("Connected to NekoPunch");
     notify("Connected to server");
+    ws.send(JSON.stringify({
+      "type": "init",
+      "limit": eventLimit;
+    }));
   };
 
   ws.onmessage = function(message) {
@@ -48,8 +52,13 @@ function chat(header, content, color) {
   limitEvents();
 }
 
-function processMessage(data) {
+function processMessage(data, isCache) {
   switch(data.type) {
+    case "cache":
+      if (isCache) return; // Should not happened
+      for (let cachedData of data.data)
+        processMessage(cachedData, true)
+      break;
     case "status":
       return notifyStatus(data.data);
     case "chat":

@@ -22,6 +22,12 @@ export default class Broadcaster {
     this.cachedEvents.push(event);
   }
 
+  getCache(limit: number): Event[] {
+    if (this.cachedEvents.length <= limit) return this.cachedEvents;
+    const length = this.cachedEvents.length;
+    return this.cachedEvents.slice(length - limit, length);
+  }
+
   chat(message: Chat) {
     let data = { type: "chat", data: message };
     this.#notify(data);

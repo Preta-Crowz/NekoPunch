@@ -31,9 +31,23 @@ const broadcaster = new Broadcaster(wss);
 
 wss.on("connection", function (ws: WebSocketClient) {
   console.log("Client connected")
-  ws.send(JSON.stringify({ type: "status", status }));
-  ws.send(JSON.stringify({ type: "cache", data: broadcaster.cachedEvents }));
+
+  ws.on("message", function (message: string) {
+    return processClientMessage(ws, JSON.parse(message));
+  });
 });
+
+function processClientMessage(ws: WebSocketClient, data: ClientMessage) {
+  switch (data.type) {
+    case "init":
+      ws.send(JSON.stringify({ type: "status", status }));
+      ws.send(JSON.stringify({ type: "cache", data: broadcaster.getCache(data.limit) }));
+      break;
+    case "refresh":
+      // NYI
+      break;
+  }
+}
 
 async function startHooks() {
   const kick = await KickChat(broadcaster, PROFILE.KICK_ID);
@@ -41,3 +55,14 @@ async function startHooks() {
   const chzzk = await ChzzkChat(broadcaster, PROFILE.CHZZK_ID);
   return {kick, youtube, chzzk};
 };
+
+type ClientMessage = InitRequest | RefreshRequest;
+
+type InitRequest = {
+  "type": "init",
+  "limit": number
+}
+
+type RefreshRequest = {
+  "type": "refresh"
+}
