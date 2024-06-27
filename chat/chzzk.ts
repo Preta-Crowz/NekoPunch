@@ -1,16 +1,20 @@
 import { WebSocketClient, StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mod.ts";
 import Broadcaster from "../broadcaster.ts";
-import ChatComponent from "../chatComponent.ts"
+import ChatComponent from "../chatComponent.ts";
 import { makeSeededGenerators, randomInt } from "https://deno.land/x/vegas@v1.3.0/mod.ts";
 import { Color } from "https://deno.land/x/color@v0.3.0/mod.ts";
 
 
 export default async function (broadcaster: Broadcaster, id: string): Promise<WebSocketClient | null> {
   if (!id) {
-    "No ID configured on Chzzk, abort connect"
+    console.warn("No ID configured on Chzzk, abort connect");
     return null;
   }
   const channelData = (await(await fetch(`https://api.chzzk.naver.com/polling/v2/channels/${id}/live-status`)).json()).content
+  if (channelData === null) {
+    console.warn("Can't find channel data from Chzzk, is stream online?")
+    return null;
+  }
   const tokenData = await (await fetch(`https://comm-api.game.naver.com/nng_main/v1/chats/access-token?channelId=${channelData.chatChannelId}&chatType=STREAMING`)).json();
   const endpoint = "wss://kr-ss2.chat.naver.com/chat";
   const subscribe = {

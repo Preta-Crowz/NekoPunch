@@ -1,12 +1,12 @@
 import { LiveChat } from "npm:youtube-chat";
 import Broadcaster from "../broadcaster.ts";
-import ChatComponent from "../chatComponent.ts"
+import ChatComponent from "../chatComponent.ts";
 import { makeSeededGenerators, randomInt } from "https://deno.land/x/vegas@v1.3.0/mod.ts";
 import { Color } from "https://deno.land/x/color@v0.3.0/mod.ts";
 
 export default async function (broadcaster: Broadcaster, id: string): Promise<LiveChat | null> {
   if (!id) {
-    "No ID configured on YouTube, abort connect"
+    console.warn("No ID configured on YouTube, abort connect");
     return null;
   }
 
@@ -38,6 +38,10 @@ export default async function (broadcaster: Broadcaster, id: string): Promise<Li
   });
 
   liveChat.on("error", (err) => {
+    if (err.message === 'Live Stream was not found') {
+      console.warn("Can't find stream data from YouTube, is stream online?");
+      return;
+    }
     console.error("Error on YouTube!");
     console.error(err);
   });

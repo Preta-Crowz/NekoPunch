@@ -11,6 +11,8 @@ nginx-rtmp-module/*
 !.env.defaults
 .profile.*
 !.profile.defaults
+.mods.*
+!.mods.defaults
 
 dumped/*
 

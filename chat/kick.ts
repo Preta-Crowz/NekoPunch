@@ -1,10 +1,10 @@
 import { WebSocketClient, StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mod.ts";
 import Broadcaster from "../broadcaster.ts";
-import ChatComponent from "../chatComponent.ts"
+import ChatComponent from "../chatComponent.ts";
 
 export default async function (broadcaster: Broadcaster, id: string): Promise<WebSocketClient | null> {
   if (!id) {
-    "No ID configured on Kick, abort connect"
+    console.warn("No ID configured on Kick, abort connect");
     return null;
   }
 
