@@ -46,9 +46,9 @@ const broadcaster = new Broadcaster(wss, integrationTool);
 
 let sockets = await startHooks();
 let status = {
-  kick: !(sockets.kick?.isClosed),
+  kick: sockets.kick !== null && !(sockets.kick?.isClosed),
   youtube: sockets.youtube,
-  chzzk: !(sockets.chzzk?.isClosed)
+  chzzk: sockets.chzzk !== null && !(sockets.chzzk?.isClosed)
 }
 
 if (status.kick || status.youtube || status.chzzk) {

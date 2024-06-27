@@ -60,9 +60,9 @@ function processMessage(data, isCache) {
         processMessage(cachedData, true)
       break;
     case "status":
-      return notifyStatus(data.data);
+      return notifyStatus(data);
     case "chat":
-      return processChat(data.data);
+      return processChat(data);
     default:
       console.warn(`Process not implemented for type: ${data.type}`);
   }
