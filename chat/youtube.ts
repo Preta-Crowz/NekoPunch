@@ -63,7 +63,7 @@ export default async function (broadcaster: Broadcaster, id: string): Promise<Li
   function convertComponents(data: any[]): ChatComponent[] {
     let r = [];
     for (let component of data) {
-      if ('text' in component) r.push({ type: "text", data: component.text });
+      if ('text' in component) r.push({ type: "text", value: component.text });
     }
     return r;
   }

@@ -16,17 +16,26 @@ export default async function (broadcaster: Broadcaster, id: string): Promise<We
     return null;
   }
   const tokenData = await (await fetch(`https://comm-api.game.naver.com/nng_main/v1/chats/access-token?channelId=${channelData.chatChannelId}&chatType=STREAMING`)).json();
+  if (tokenData.code === 42601) {
+    console.warn("Detected chzzk stream is configured as adult-only, NekoPunch will not work on current setting due to connection will failue");
+    return null;
+  }
   const endpoint = "wss://kr-ss2.chat.naver.com/chat";
   const subscribe = {
-    "ver": "2",
+    "ver": "3",
     "cmd": 100,
     "svcid": "game",
     "cid": channelData.chatChannelId,
     "bdy": {
-      "uid": null,
-      "devType": 2001,
       "accTkn": tokenData.accessToken,
-      "auth": "READ"
+      "auth": "READ",
+      "devName": "Google Chrome/ 102.0.0.0",
+      "devType": 2001,
+      "libVer": "4.9.3",
+      "locale": "ko",
+      "osVer": "Windows/10",
+      "timezone": "Asia/Seoul",
+      "uid": null
     },
     "tid": 1
   }
@@ -36,7 +45,7 @@ export default async function (broadcaster: Broadcaster, id: string): Promise<We
   ws.on("open", function() {
     console.log("Connected to Chzzk");
     ws.send(JSON.stringify(subscribe));
-    interval = setInterval(ws=>ws.send(JSON.stringify({"ver":"2","cmd":0})),1000,ws);
+    interval = setInterval(ws=>ws.send(JSON.stringify({"ver":"3","cmd":0})),5000,ws);
   });
 
   ws.on("message", function (message: { data: string }) {
