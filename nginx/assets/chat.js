@@ -11,7 +11,7 @@ $(function() {
     notify("Connected to server");
     ws.send(JSON.stringify({
       "type": "init",
-      "limit": eventLimit;
+      "limit": eventLimit
     }));
   };
 
