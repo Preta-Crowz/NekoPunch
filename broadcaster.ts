@@ -50,10 +50,10 @@ export default class Broadcaster {
       && message.content.length === 1
       && 'value' in message.content[0]
       && message.content[0].value[0] === '*') {
-      let [command, ...args] = message.content[0].value[0].split(' ');
+      let [command, ...args] = message.content[0].value.split(' ');
       switch (command) {
-        case 'refresh':
-          if (args.length < 0) return this.#tool.refreshAll();
+        case '*refresh':
+          if (args.length < 1) return this.#tool.refreshAll();
           if (args[0] in ['chzzk','youtube','kick']) return this.#tool.refresh(args[0] as Supported);
       }
     }

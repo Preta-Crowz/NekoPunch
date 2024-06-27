@@ -13,12 +13,12 @@ const PROFILE = await loadEnv({
 });
 
 class Tool implements iTool {
-  async refresh(type: Supported) {
+  async refresh(type: Supported, isInternal: boolean = false) {
     switch (type) {
       case 'kick':
         sockets.kick?.close(1000);
         sockets.kick = await KickChat(broadcaster, PROFILE.KICK_ID);
-        status.kick = !(sockets.kick?.isClosed);
+        status.kick = sockets.kick !== null && !(sockets.kick?.isClosed);
         break;
       case 'youtube':
         sockets.youtube?.stop();
@@ -28,15 +28,18 @@ class Tool implements iTool {
       case 'chzzk':
         sockets.chzzk?.close(1000);
         sockets.chzzk = await ChzzkChat(broadcaster, PROFILE.CHZZK_ID);
-        status.chzzk = !(sockets.chzzk?.isClosed);
+        status.chzzk = sockets.chzzk !== null && !(sockets.chzzk?.isClosed);
         break;
     }
+    if (isInternal) return;
+    broadcast(wss, JSON.stringify({ type: "status", status }));
   }
 
-  refreshAll() {
-    this.refresh('kick');
-    this.refresh('youtube');
-    this.refresh('chzzk');
+  async refreshAll() {
+    await this.refresh('kick', true);
+    await this.refresh('youtube', true);
+    await this.refresh('chzzk', true);
+    broadcast(wss, JSON.stringify({ type: "status", status }));
   }
 }
 
@@ -65,6 +68,12 @@ wss.on("connection", function (ws: WebSocketClient) {
     return processClientMessage(ws, JSON.parse(message));
   });
 });
+
+function broadcast(wss, data) {
+  for (const ws of wss.clients) {
+    ws.send(data);
+  }
+}
 
 function processClientMessage(ws: WebSocketClient, data: ClientMessage) {
   switch (data.type) {

@@ -62,7 +62,7 @@ function processMessage(data, isCache) {
     case "status":
       return notifyStatus(data);
     case "chat":
-      return processChat(data);
+      return processChat(data.data);
     default:
       console.warn(`Process not implemented for type: ${data.type}`);
   }
@@ -89,7 +89,7 @@ function processChat(data) {
   header = header.append($(`<img src="/assets/platform/${data.platform}.png">`)).append(data.sender.username).append(badges);
 
   for (let c of data.content) { // todo: emoji
-    if (c.text) content = content.append(c.text)
+    if (c.value) content = content.append(c.value)
   }
   chat(header, content, data.sender.color);
 }
