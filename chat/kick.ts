@@ -10,7 +10,7 @@ export default async function (broadcaster: Broadcaster, id: string): Promise<We
 
   const chInfo = await (await fetch(`https://kick.com/api/v2/channels/${id}/chatroom`)).json();
 
-  const endpoint = "wss://ws-us2.pusher.com/app/eb1d5f283081a78b932c?protocol=7&client=js&version=7.6.0&flash=false";
+  const endpoint = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=7.6.0&flash=false";
   const subscribe = {
       "event": "pusher:subscribe",
       "data": {
